@@ -176,11 +176,30 @@ function processCycle() {
     if ($ret === false)
       return;
 
+    $cash = array();
     for($i=0;$i<$total;$i++) {
-      $ret = $dev->getValue( $res[$i]['VAL'] );
+      // KEY
+      $key = $res[$i]['VAL'];
+      $keyn = $key;
+      
+      $start = strpos($keyn, "(");
+      if ($start)
+        $keyn = substr($keyn, 0, $start);
+      
+      if (array_key_exists($keyn, $cash))
+        $ret = $cash[$keyn];
+      else
+        $ret = $dev->getValue( $key );
+
+      // IND
+      $ind = $res[$i]['IND'];
+      if ($ind == "") $ind = 0;
+      
+      $ret = $ret[ $keyn ][(int)$ind];
       
       setGlobal( $res[$i]['OBJECT'].".".$res[$i]['PROPERTY'], $ret );
     }
+    
     $dev->disconnect();  
   }   
   
@@ -209,7 +228,8 @@ function dbInstall($data) {
   // Send message
   $data = <<<EOD
   engmeraval: ID int(10) unsigned NOT NULL auto_increment
-  engmeraval: VAL varchar(255) NOT NULL DEFAULT ''    
+  engmeraval: VAL varchar(255) NOT NULL DEFAULT ''
+  engmeraval: IND varchar(255) NOT NULL DEFAULT ''
   engmeraval: OBJECT varchar(255) NOT NULL DEFAULT ''
   engmeraval: PROPERTY varchar(255) NOT NULL DEFAULT ''  
 EOD;

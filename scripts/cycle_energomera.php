@@ -28,7 +28,7 @@ while (1)
    setGlobal((str_replace('.php', '', basename(__FILE__))) . 'Run', time(), 1);
    if ((time()-$latest_check)>$checkEvery) {
     $latest_check=time();
-    echo date('Y-m-d H:i:s').' Polling devices...';
+    //echo date('Y-m-d H:i:s').' Polling devices...\n';
     $energomera_module->processCycle();
    }
    if (file_exists('./reboot') || IsSet($_GET['onetime']))

@@ -23,6 +23,15 @@
    <input  type="text" name="val" value="[#VAL#]" class="form-control input">
  </div>
 </div>
+<!-- Ind (varchar) -->
+<div class="form-group">
+ <label class="control-label"[#if ERR_IND#] style="color:red;font-weight:bold"[#endif#]>
+ Index:
+ </label>
+ <div class="controls">
+   <input  type="text" name="ind" value="[#IND#]" class="form-control input">
+ </div>
+</div>
 <!-- Object (varchar) -->
 <div class="form-group">
  <label class="control-label"[#if ERR_LINKED_OBJECT#] style="color:red;font-weight:bold"[#endif#]>Object:</label>

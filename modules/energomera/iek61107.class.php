@@ -11,7 +11,8 @@ include_once('PhpSerial.php');
 
 class iek61107{
   public $Serial;
-  public $debug = true;
+  public $debug = false;
+	public $WaitBeforeRead = 0.5;
   
   function iek61107($device){
     $serial = new phpSerial;
@@ -51,6 +52,7 @@ class iek61107{
   * Disconnect the device
   */
   function disconnect(){    
+		$this->Serial->sendMessage(hex2bin("0142300375"), $this->WaitBeforeRead);			
     $this->Serial->deviceClose();
 	  if($this->debug) echo  date("Y-m-d H:i:s")." Disconnected\n";
   }
@@ -60,58 +62,65 @@ class iek61107{
     //=== #1
     //  /?!..
     //  /EKT5CE102Mv01..
-    $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), 0.5);
+    $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
-        if($this->debug) echo  date("Y-m-d H:i:s")." Error send init\n";
+        //if($this->debug) 
+        echo date("Y-m-d H:i:s")." Error send init\n";
         return $result;
     }    
-    //if($this->debug) echo  date("Y-m-d H:i:s")."Send init #1 \n";
+    if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1 \n";
    
     $ch = $this->Serial->readPort(3500);    
     if (empty($ch))
     {
-      $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), 0.5);
+      $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
       if ($result === false)
       {
-          if($this->debug) echo  date("Y-m-d H:i:s")." Error send init #1-2\n";
+          //if($this->debug) echo  
+            date("Y-m-d H:i:s")." Error send init #1-2\n";
           return $result;
       }    
-      //if($this->debug) echo  date("Y-m-d H:i:s")."Send init #1-2 \n";
+      if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1-2 \n";
       
       $ch = $this->Serial->readPort(3500);      
       if (empty($ch))
+      {
+        if($this->debug) echo  date("Y-m-d H:i:s")." Init timeout\n";
         return false;
+      }
     }
     
     if ($ch != hex2bin("2F454B543543453130324D7630310D0A"))
     {
-      if($this->debug) echo  date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
+      //if($this->debug) 
+        echo date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
       return false;
     }
     
     //=== #2
     //  .051..
     //  .P0.(www.energomera.ru).#
-    $result = $this->Serial->sendMessage(hex2bin("063035310D0A"), 0.5);
+    $result = $this->Serial->sendMessage(hex2bin("063035310D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
-        if($this->debug) echo  date("Y-m-d H:i:s")." Error send init #2\n";
+        //if($this->debug) 
+          echo date("Y-m-d H:i:s")." Error send init #2\n";
         return $result;
     }    
-    //if($this->debug) echo  date("Y-m-d H:i:s")."Send init #2 \n";
+    if($this->debug) echo  date("Y-m-d H:i:s")." Send init #2 \n";
     
     $ch = $this->Serial->readPort(3500);
     
     // Model
-    //if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
+    if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
 
     return true;
   }
   
-  function getValue($val)
+  function getValue($val, $timeout = 3500)
   {
-    if($this->debug) echo  date("Y-m-d H:i:s")." Read ".$val." ";
+    // if($this->debug) echo  date("Y-m-d H:i:s")." Read ".$val." ";
     
     $data = "\1R1\2".$val."\3";
     $cs = 0;
@@ -120,28 +129,52 @@ class iek61107{
     $cs = $cs % 128;
     $data = $data . chr($cs);
   
-    $result = $this->Serial->sendMessage($data, 0.5);
+    $result = $this->Serial->sendMessage($data, $this->WaitBeforeRead);
     if ($result === false)
     {
-        if($this->debug) echo " Error send init #2\n";
+        //if($this->debug) 
+          echo date("Y-m-d H:i:s")." Error send init #2\n";
         return $result;
     }
     
-    $data = $this->Serial->readPort(3500);
+    $data = $this->Serial->readPort($timeout);
     if (empty($data))
     {
-      if($this->debug) echo " Time out\n";
+      //if($this->debug) 
+        echo date("Y-m-d H:i:s")." Time out\n";
       return (false);
     }
     
-    $start = strpos($data, "(");
-    $stop = strpos($data, ")", $start);
+    //TODO check CS
+    $data = substr($data, 1, strlen($data)-3);
+    $arr = explode("\r\n", $data);
     
-    $data = substr($data, $start+1, $stop-$start-1);
+    $ret = array();
+    $lastkey = "";
+
+    for ($i=0; $i < count($arr); $i++)
+    {       
+      $str = trim($arr[$i]);
+      if ($str == "") continue;      
+
+      // Get key
+      $start = strpos($str, "(");
+      $stop = strpos($str, ")", $start);
+      
+      $key = substr($str, 0, $start);
+      $val = substr($str, $start+1, $stop-$start-1);
+      
+      if ($key != "") $lastkey = $key;
+      
+      if (!array_key_exists($lastkey, $ret))
+        $ret[$lastkey] = array();
+      
+      $arritm = $ret[$lastkey];      
+      $arritm[] = $val;
+      $ret[$lastkey] = $arritm;
+    }
     
-    if($this->debug) echo $data."\n";
-    
-    return $data;
+    return $ret;    
   }
   
 }

@@ -2,7 +2,14 @@
 
 include_once("iek61107.class.php");
 
+function ShowVal($dev, $val, $timeout = 3500)
+{
+  $arr = $dev->getValue($val, $timeout);
+  echo "<pre>$val = ".htmlspecialchars(print_r($arr,true))."</pre><br>\n";
+}
+
 $dev = new iek61107("/dev/ttyUSB0");
+$dev->debug = true;
 
 $ret = $dev->connect();
 if ($ret === false)
@@ -19,16 +26,19 @@ if ($ret === false)
 }
 
 echo "<br>\n";
-//$dev->getValue("SNUMB()"); echo "<br>\n";
-$dev->getValue("VOLTA()"); echo "<br>\n";
-$dev->getValue("CURRE()"); echo "<br>\n";
-$dev->getValue("POWEP()"); echo "<br>\n";
-$dev->getValue("FREQU()"); echo "<br>\n";
-$dev->getValue("COS_f()"); echo "<br>\n";
-$dev->getValue("ET0PE()"); echo "<br>\n";
-//$dev->getValue("MSYAD()"); echo "<br>\n";
-//$dev->getValue("V_BAT()"); echo "<br>\n";
-//$dev->getValue("TEMPR()"); echo "<br>\n";
+//ShowVal($dev, "SNUMB()");
+//ShowVal($dev, "VOLTA()");
+//ShowVal($dev, "CURRE()");
+//ShowVal($dev, "POWEP()"); 
+//ShowVal($dev, "FREQU()"); 
+//ShowVal($dev, "COS_f()");
+//ShowVal($dev, "ET0PE()"); 
+//ShowVal($dev, "MSYAD()"); 
+//ShowVal($dev, "V_BAT()"); 
+//ShowVal($dev, "TEMPR()"); 
+
+ShowVal($dev, "LOG01()", 20000); 
+
 
 $dev->disconnect();
 

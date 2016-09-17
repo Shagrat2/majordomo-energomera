@@ -17,6 +17,10 @@ if ($this->mode=='update') {
       $ok=0;
     }
     
+    // Ind
+    global $ind;
+    $rec['IND'] = $ind;
+    
 		// Object
     $old_object=$rec['OBJECT'];
     $old_property=$rec['PROPERTY'];
