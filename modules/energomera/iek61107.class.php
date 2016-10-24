@@ -71,7 +71,7 @@ class iek61107{
     }    
     if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1 \n";
    
-    $ch = $this->Serial->readPort(3500);    
+    $ch = $this->Serial->readPort(); // 3500
     if (empty($ch))
     {
       $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
@@ -83,7 +83,7 @@ class iek61107{
       }    
       if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1-2 \n";
       
-      $ch = $this->Serial->readPort(3500);      
+      $ch = $this->Serial->readPort(); // 3500
       if (empty($ch))
       {
         if($this->debug) echo  date("Y-m-d H:i:s")." Init timeout\n";
@@ -91,13 +91,16 @@ class iek61107{
       }
     }
     
-    if ($ch != hex2bin("2F454B543543453130324D7630310D0A"))
-    {
-      //if($this->debug) 
-        echo date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
+		// Check device type
+    if (
+			($ch != hex2bin("2F454B543543453130324D7630310D0A")) && // EKT5CE102Mv01
+			($ch != hex2bin("2F454B543543453330317631310D0A")) 			// EKT5CE301v11
+		) {
+      echo date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
       return false;
-    }
-    
+    }		
+		if($this->debug) echo date("Y-m-d H:i:s")." Device is $ch: \n";
+		
     //=== #2
     //  .051..
     //  .P0.(www.energomera.ru).#
@@ -110,7 +113,7 @@ class iek61107{
     }    
     if($this->debug) echo  date("Y-m-d H:i:s")." Send init #2 \n";
     
-    $ch = $this->Serial->readPort(3500);
+    $ch = $this->Serial->readPort(); // 3500
     
     // Model
     if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
@@ -118,9 +121,9 @@ class iek61107{
     return true;
   }
   
-  function getValue($val, $timeout = 3500)
+  function getValue($val)
   {
-    // if($this->debug) echo  date("Y-m-d H:i:s")." Read ".$val." ";
+    if($this->debug) echo date("Y-m-d H:i:s")." Read ".$val." ";
     
     $data = "\1R1\2".$val."\3";
     $cs = 0;
@@ -137,7 +140,7 @@ class iek61107{
         return $result;
     }
     
-    $data = $this->Serial->readPort($timeout);
+    $data = $this->Serial->readPort();
     if (empty($data))
     {
       //if($this->debug) 
@@ -172,6 +175,14 @@ class iek61107{
       $arritm = $ret[$lastkey];      
       $arritm[] = $val;
       $ret[$lastkey] = $arritm;
+    }
+    
+    if($this->debug){
+      $dret = print_r($ret, true);
+      $dret = str_replace("\n", " ", $dret);
+      $dret = str_replace("\t", " ", $dret);
+      $dret = str_replace("  ", " ", $dret);
+      echo $dret."\n";
     }
     
     return $ret;    
