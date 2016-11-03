@@ -60,8 +60,7 @@ class iek61107{
   function init(){
     
     //=== #1
-    //  /?!..
-    //  /EKT5CE102Mv01..
+    //  /?!..    
     $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
@@ -91,19 +90,20 @@ class iek61107{
       }
     }
     
-		// Check device type
+	// Check device type
+/*	
     if (
 			($ch != hex2bin("2F454B543543453130324D7630310D0A")) && // EKT5CE102Mv01
-			($ch != hex2bin("2F454B543543453330317631310D0A")) 			// EKT5CE301v11
+			($ch != hex2bin("2F454B543543453330317631310D0A")) 		// EKT5CE301v11
 		) {
       echo date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
       return false;
     }		
-		if($this->debug) echo date("Y-m-d H:i:s")." Device is $ch: \n";
+*/	
+	if($this->debug) echo date("Y-m-d H:i:s")." Device is $ch: \n";
 		
     //=== #2
-    //  .051..
-    //  .P0.(www.energomera.ru).#
+    //  .051..    
     $result = $this->Serial->sendMessage(hex2bin("063035310D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
@@ -115,7 +115,8 @@ class iek61107{
     
     $ch = $this->Serial->readPort(); // 3500
     
-    // Model
+		// .P0.(www.energomera.ru).
+    // .P0.(777777).
     if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
 
     return true;
