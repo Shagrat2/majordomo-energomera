@@ -12,7 +12,8 @@ include_once('PhpSerial.php');
 class iek61107{
   public $Serial;
   public $debug = false;
-	public $WaitBeforeRead = 0.5;
+  public $WaitBeforeRead = 0.5;
+  public $DevIdent = "";
   
   function iek61107($device){
     $serial = new phpSerial;
@@ -32,7 +33,7 @@ class iek61107{
   * @return bool
   */
   function connect(){    
-	  if($this->debug) echo date("Y-m-d H:i:s")." Connecting COM\n";
+	if($this->debug) echo date("Y-m-d H:i:s")." Connecting COM\n";
 		
     $result = $this->Serial->deviceOpen("w+b");
     
@@ -52,7 +53,7 @@ class iek61107{
   * Disconnect the device
   */
   function disconnect(){    
-		$this->Serial->sendMessage(hex2bin("0142300375"), $this->WaitBeforeRead);			
+	$this->Serial->sendMessage(hex2bin("0142300375"), $this->WaitBeforeRead);			
     $this->Serial->deviceClose();
 	  if($this->debug) echo  date("Y-m-d H:i:s")." Disconnected\n";
   }
@@ -76,8 +77,7 @@ class iek61107{
       $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
       if ($result === false)
       {
-          //if($this->debug) echo  
-            date("Y-m-d H:i:s")." Error send init #1-2\n";
+          date("Y-m-d H:i:s")." Error send init #1-2\n";
           return $result;
       }    
       if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1-2 \n";
@@ -90,16 +90,7 @@ class iek61107{
       }
     }
     
-	// Check device type
-/*	
-    if (
-			($ch != hex2bin("2F454B543543453130324D7630310D0A")) && // EKT5CE102Mv01
-			($ch != hex2bin("2F454B543543453330317631310D0A")) 		// EKT5CE301v11
-		) {
-      echo date("Y-m-d H:i:s")." Device not equal: ".$ch."\n";
-      return false;
-    }		
-*/	
+	$this->DevIdent = $ch;	
 	if($this->debug) echo date("Y-m-d H:i:s")." Device is $ch: \n";
 		
     //=== #2
@@ -120,6 +111,10 @@ class iek61107{
     if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
 
     return true;
+  }
+  
+  function GetDevInfo(){	  
+	  return $this->DevIdent;
   }
   
   function getValue($val)

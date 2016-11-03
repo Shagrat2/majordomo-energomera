@@ -111,9 +111,10 @@ function run() {
 * @access public
 */
 function admin(&$out) {
- $this->getConfig();
- $out['E_SERIAL']=$this->config['E_SERIAL'];
- $out['E_INTERVAL']=$this->config['E_INTERVAL'];
+  $this->getConfig();
+  $out['E_SERIAL']=$this->config['E_SERIAL'];
+  $out['E_INTERVAL']=$this->config['E_INTERVAL'];
+  $out['DEVINFO'] = $this->config['DEVINFO'];
  
   if ($this->view_mode=='update_settings') {
     global $e_serial;
@@ -175,6 +176,12 @@ function processCycle() {
     $ret = $dev->init();
     if ($ret === false)
       return;
+  
+	$val = $dev->GetDevInfo();
+	if ($val != $this->config['DEVINFO']){
+		$this->config['DEVINFO'] = $val;
+		$this->saveConfig();
+	}
 
     $cash = array();
     for($i=0;$i<$total;$i++) {
