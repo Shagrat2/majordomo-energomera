@@ -504,6 +504,50 @@ class PhpSerial
             return false;
         }
     }
+	
+	/**
+     * Configures the flow control
+     *
+     * @param  string $mode Set the flow control mode. Availible modes :
+     *                      -> "none" : no flow control
+     *                      -> "rts/cts" : use RTS/CTS handshaking
+     *                      -> "xon/xoff" : use XON/XOFF protocol
+     * @return bool
+     */
+    public function confNotRNMode(){
+		
+		if ($this->_dState !== SERIAL_DEVICE_SET) {
+            trigger_error("Unable to set params : the device is " .
+                          "either not set or opened", E_USER_WARNING);
+
+            return false;
+        }
+		
+        if ($this->_os === "linux") {			
+            $ret = $this->_exec(
+                "stty -onlcr -isig -echo -F " . $this->_device,
+                $out
+            );
+        } elseif ($this->_os === "osx") {
+            $ret = $this->_exec(
+                "stty -onlcr -isig -echo -f" . $this->_device,
+                $out
+            );
+        } else {
+            $ret = 0;
+        }
+		
+		if ($ret === 0) {
+            return true;
+        } else {
+            trigger_error(
+                "Unable to set flow control : " . $out[1],
+                E_USER_ERROR
+            );
+
+            return false;
+        }
+    }
 
     /**
      * Sets a setserial parameter (cf man setserial)

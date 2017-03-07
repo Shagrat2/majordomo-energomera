@@ -23,6 +23,7 @@ class iek61107{
     $serial->confParity("even");
     $serial->confCharacterLength(7);
     $serial->confStopBits(1);
+	$serial->confNotRNMode(); // Patch AlexK-71 07.03.2017
 
     $this->Serial = $serial; 
   }
@@ -55,7 +56,7 @@ class iek61107{
   function disconnect(){    
 	$this->Serial->sendMessage(hex2bin("0142300375"), $this->WaitBeforeRead);			
     $this->Serial->deviceClose();
-	  if($this->debug) echo  date("Y-m-d H:i:s")." Disconnected\n";
+	if($this->debug) echo  date("Y-m-d H:i:s")." Disconnected\n";
   }
 
   function init(){
@@ -65,13 +66,12 @@ class iek61107{
     $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
-        //if($this->debug) 
-        echo date("Y-m-d H:i:s")." Error send init\n";
+		echo date("Y-m-d H:i:s")." Error send init\n";
         return $result;
     }    
     if($this->debug) echo  date("Y-m-d H:i:s")." Send init #1 \n";
-   
-    $ch = $this->Serial->readPort(); // 3500
+	
+	$ch = $this->Serial->readPort();// 3500 );
     if (empty($ch))
     {
       $result = $this->Serial->sendMessage(hex2bin("2F3F210D0A"), $this->WaitBeforeRead);
@@ -98,17 +98,33 @@ class iek61107{
     $result = $this->Serial->sendMessage(hex2bin("063035310D0A"), $this->WaitBeforeRead);
     if ($result === false)
     {
-        //if($this->debug) 
-          echo date("Y-m-d H:i:s")." Error send init #2\n";
+        echo date("Y-m-d H:i:s")." Error send init #2\n";
         return $result;
     }    
     if($this->debug) echo  date("Y-m-d H:i:s")." Send init #2 \n";
     
     $ch = $this->Serial->readPort(); // 3500
     
-		// .P0.(www.energomera.ru).
+	// .P0.(www.energomera.ru).
     // .P0.(777777).
     if($this->debug) echo  date("Y-m-d H:i:s")." model:".$ch."\n";
+
+	//Patch  AlexK-71 07.03.2017
+    //=== #3
+    //  .R1.MODEL().J    
+    $result = $this->Serial->sendMessage(hex2bin("015231024D4F44454C2829034A"), $this->WaitBeforeRead);
+    if ($result === false)
+    {
+		echo date("Y-m-d H:i:s")." Error send init #3\n";
+        return $result;
+    }    
+    if($this->debug) echo  date("Y-m-d H:i:s")." Send init #3 \n";
+    
+    $ch = $this->Serial->readPort(); // 3500
+    
+	// SNUMB(008841083000505)...j
+    if($this->debug) echo  date("Y-m-d H:i:s")." model: ".bin2hex($ch)." $ch \n";
+	//END AlexK-71 07.03.2017
 
     return true;
   }
@@ -131,21 +147,25 @@ class iek61107{
     $result = $this->Serial->sendMessage($data, $this->WaitBeforeRead);
     if ($result === false)
     {
-        //if($this->debug) 
-          echo date("Y-m-d H:i:s")." Error send init #2\n";
+        echo date("Y-m-d H:i:s")." Error send init #2\n";
         return $result;
     }
     
     $data = $this->Serial->readPort();
     if (empty($data))
     {
-      //if($this->debug) 
-        echo date("Y-m-d H:i:s")." Time out\n";
-      return (false);
+		echo date("Y-m-d H:i:s")." Time out\n";
+		return (false);
     }
-    
+	
     //TODO check CS
     $data = substr($data, 1, strlen($data)-3);
+
+	//??? Patch first char	
+	if ((ord($data[0]) < 0x41) || (ord($data[0]) > 0x5A)) {		
+		$data = substr($data, 2, strlen($data));
+	}
+	
     $arr = explode("\r\n", $data);
     
     $ret = array();
@@ -162,7 +182,7 @@ class iek61107{
       
       $key = substr($str, 0, $start);
       $val = substr($str, $start+1, $stop-$start-1);
-      
+     
       if ($key != "") $lastkey = $key;
       
       if (!array_key_exists($lastkey, $ret))
