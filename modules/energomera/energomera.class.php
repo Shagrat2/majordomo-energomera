@@ -203,7 +203,8 @@ function processCycle() {
       if ($ind == "") $ind = 0;
       
       $ret = $ret[ $keyn ][(int)$ind];
-      
+	  if (($ret === false) || ($ret == "")) continue;   
+	  
       setGlobal( $res[$i]['OBJECT'].".".$res[$i]['PROPERTY'], $ret );
     }
     
