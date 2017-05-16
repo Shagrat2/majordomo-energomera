@@ -133,6 +133,10 @@ function admin(&$out) {
   if ($this->view_mode=='edit') {
     $this->edit($out, $this->id);
   }
+  if ($this->view_mode=='delete') {
+    $this->delete($this->id);
+	$this->redirect( "?" );
+  }
 }
 /**
 * Search
@@ -149,6 +153,16 @@ function search(&$out) {
 */
 function edit(&$out, $id) {
   require(DIR_MODULES.$this->name.'/edit.inc.php');
+}
+/**
+* Delete
+*
+* @access public
+*/
+function delete($id) {
+  $rec=SQLSelectOne("SELECT * FROM engmeraval WHERE ID='$id'");
+  // some action for related tables
+  SQLExec("DELETE FROM engmeraval WHERE ID='".$rec['ID']."'"); 
 }
 /**
 * FrontEnd
