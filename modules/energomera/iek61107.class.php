@@ -85,7 +85,8 @@ class iek61107{
       $ch = $this->Serial->readPort(); // 3500
       if (empty($ch))
       {
-        if($this->debug) echo  date("Y-m-d H:i:s")." Init timeout\n";
+        //if($this->debug) echo  
+		date("Y-m-d H:i:s")." Init timeout\n";
         return false;
       }
     }
