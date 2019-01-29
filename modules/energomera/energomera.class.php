@@ -198,9 +198,13 @@ function processCycle() {
 	}
 
     $cash = array();
+	$d = date("m.y"); // текущий месяц
+	
     for($i=0;$i<$total;$i++) {
       // KEY
       $key = $res[$i]['VAL'];
+	  if ($key == "EAMPE()") $key = "EAMPE($d)";
+	  
       $keyn = $key;
       
       $start = strpos($keyn, "(");
